@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% block title %}404 Not Found{% endblock%}
+{% block content %}
+<h1 style="padding-left: 120px;">404 NOT FOUND</h1>
+<p style="padding-left: 160px;"><strong><span style="color: #ff0000;">Страница {{ path }} не найдена&nbsp;</span></strong></p>
+<p><img src="https://pixelbox.ru/wp-content/uploads/2021/10/gif-for-steam-pixelbox.ru-49.gif" alt="" width="546" height="350" /></p>
+<p>Вы можете продолжать сидеть тут и смотреть на пикачу, а можете продолжить исследовать наш сайт.</p>
+<p><a href="{% url 'posts:index' %}"><strong><span style="text-decoration: underline;">Перейдите на главную страницу</span></strong></a></p>
+{% endblock %}
