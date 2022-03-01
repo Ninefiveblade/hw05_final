@@ -57,6 +57,7 @@
           </div>
         </div>
       {% endif %}
+      {% with comments=post.comments.all %}
       {% for comment in comments %}
         <div class="media mb-4">
           <div class="media-body">
@@ -71,5 +72,5 @@
             </div>
           </div>
       {% endfor %} 
-
+      {% endwith %}
       {% endblock %}

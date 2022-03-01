@@ -2,7 +2,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 
-from .models import Post, Follow, Comment, Group, User
+from .models import Post, Follow, Group, User
 from .forms import PostForm, CommentForm
 from .utils import paginator_obg
 from django.views.decorators.cache import cache_page
@@ -76,7 +76,6 @@ def post_detail(request, post_id):
     """
     form = CommentForm()
     posts = Post.objects.get(id=post_id)
-    comment = Comment.objects.filter(post=posts)
     author = posts.author
     title = f'{posts.text[:30]}'
     count = Post.objects.filter(author=posts.author).count()
@@ -86,7 +85,6 @@ def post_detail(request, post_id):
         'author': author,
         'count': count,
         'form': form,
-        'comments': comment
     }
     return render(request, 'posts/post_detail.html', context)
 
