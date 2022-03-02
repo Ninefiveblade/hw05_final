@@ -85,6 +85,12 @@ class Follow(models.Model):
         related_name='following'
     )
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'author'],
+                                    name='unique_follows')
+        ]
+
 
 class Group(models.Model):
     """Group инициализирует и настраивает значение полей сообщества.
@@ -93,6 +99,9 @@ class Group(models.Model):
     title = models.CharField(max_length=200)
     slug = models.SlugField(unique=True)
     description = models.TextField()
+
+    class Meta:
+        ordering = ['-groups']
 
     def __str__(self) -> str:
         return self.title

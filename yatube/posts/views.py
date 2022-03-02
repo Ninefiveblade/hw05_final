@@ -145,7 +145,6 @@ def post_edit(request, post_id):
 def add_comment(request, post_id):
     post = Post.objects.get(id=post_id)
     form = CommentForm(request.POST or None)
-    print(form.errors)
     if form.is_valid():
         comment = form.save(commit=False)
         comment.author = request.user
