@@ -9,7 +9,7 @@ User = get_user_model()
 class PostModelTest(TestCase):
     "Тест models приложения posts"
     group_title = 'Тестовая группа'
-    post_text = 'Тестовое сообщение'
+    post_text = 'test_message'
 
     @classmethod
     def setUpClass(cls):
@@ -18,14 +18,14 @@ class PostModelTest(TestCase):
         cls.group = Group.objects.create(
             title=cls.group_title,
         )
-        cls.post = Post.objects.create(
+        cls.post_test_message = Post.objects.create(
             author=cls.user,
-            text=cls.post_text,
+            text='test_message',
         )
 
     def test_models_have_correct_object_names(self):
         """Проверяем, что у моделей корректно работает __str__."""
-        post = PostModelTest.post
+        post = PostModelTest.post_test_message
         text = post.text[:15]
         self.assertEqual(text, str(post))
         group = PostModelTest.group
@@ -34,7 +34,7 @@ class PostModelTest(TestCase):
 
     def test_models_have_verbose_name(self):
         """Проверяем есть ли у моделей verbose_name"""
-        post = PostModelTest.post
+        post = PostModelTest.post_test_message
         field_verboses = {
             'text': 'Текст поста',
             'author': 'Автор',
@@ -47,7 +47,7 @@ class PostModelTest(TestCase):
 
     def test_models_have_verbose_name(self):
         """Проверяем есть ли у моделей help_text"""
-        post = PostModelTest.post
+        post = PostModelTest.post_test_message
         field_help_text = {
             'text': 'Введите текст поста',
             'group': 'Выберите группу'

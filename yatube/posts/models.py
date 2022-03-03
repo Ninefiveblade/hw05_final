@@ -101,7 +101,7 @@ class Group(models.Model):
     description = models.TextField()
 
     class Meta:
-        ordering = ['-groups']
+        ordering = ['-title']
 
     def __str__(self) -> str:
         return self.title

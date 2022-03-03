@@ -22,13 +22,7 @@ class TestPostsForms(TestCase):
     group_title = 'Тайтл'
     group_slug = 'slug'
     group_description = 'group_description'
-    post_text = 'Текст'
-    post_id = 1
-    post_text_second = 'Текст2'
-    post_id_second = 2
-    counter_user_create = 3
-    counter_follow = 3
-    counter_posts = 2
+    post_text_second = 'text_second'
     follow_object_id = 1
     small_gif = (
         b'\x47\x49\x46\x38\x39\x61\x02\x00'
@@ -74,11 +68,10 @@ class TestPostsForms(TestCase):
             content_type=cls.image_content
         )
 
-        cls.post = Post.objects.create(
+        cls.post_some_text = Post.objects.create(
             author=cls.user,
-            text=cls.post_text,
+            text='some_text',
             group=cls.group,
-            id=cls.post_id
         )
 
     @classmethod
@@ -94,17 +87,15 @@ class TestPostsForms(TestCase):
             'image': self.uploaded
         }
         self.authorized.post(reverse('posts:post_create'), data=form_data)
-        count_post = Post.objects.all().count()
-        self.assertEqual(count_post, self.counter_posts)
-        self.assertTrue(
-            Post.objects.filter(
-                text=self.post_text_second,
-                image=self.image_template,
-                author=self.user,
-                group=self.group.id,
-                id=self.post_id_second
-            ).exists()
+        post_get = Post.objects.filter(
+            text=self.post_text_second,
+            group=self.group.id,
+            image=self.uploaded
         )
+        for post in post_get:
+            self.assertEqual(post.author.username, self.username)
+            self.assertEqual(post.group.slug, self.group.slug)
+            self.assertEqual(post.image.name, self.image_name)
 
     def test_post_edit_database_correct(self):
         """Проверка корректного изменения
@@ -114,17 +105,14 @@ class TestPostsForms(TestCase):
             'image': self.uploaded_second
         }
         self.authorized.post(reverse(
-            'posts:post_edit', kwargs={'post_id': self.post_id}), form_data,
+            'posts:post_edit',
+            kwargs={'post_id': self.post_some_text.id}),
+            form_data
         )
-        self.assertTrue(
-            Post.objects.filter(
-                text=self.post_text_second,
-                image=self.second_image_template,
-                author=self.user,
-                id=self.post_id,
-                group=None
-            ).exists()
-        )
+        post_get = Post.objects.get(id=self.post_some_text.id)
+        self.assertEqual(post_get.author.username, self.username)
+        self.assertEqual(post_get.image.name, self.second_image_template)
+        self.assertIsNone(post_get.group)
 
     def test_create_user(self):
         """Проверка создания нового пользователя."""
@@ -136,24 +124,27 @@ class TestPostsForms(TestCase):
             'password1': 'Sp135246',
             'password2': 'Sp135246',
         }
-        self.assertIsInstance('users:signup', str)
         self.client.post(reverse('users:signup'), form_signup)
-        self.assertEqual(User.objects.all().count(), self.counter_user_create)
+        user_get = User.objects.get(username='lexeone')
+        self.assertEqual(user_get.username, form_signup['username'])
+        self.assertEqual(user_get.email, form_signup['email'])
 
     def test_comment_create(self):
         """Проверка создания комментов."""
         Comment.objects.create(
-            post=self.post,
+            post=self.post_some_text,
             text=self.comment_text,
             author=self.user
         )
-        self.assertTrue(
-            Comment.objects.filter(
-                post=self.post,
-                text=self.comment_text,
-                author=self.user
-            )
+        comments = Comment.objects.filter(
+            post=self.post_some_text,
+            text=self.comment_text,
+            author=self.user
         )
+        for comment in comments:
+            self.assertEqual(comment.post, self.post_some_text)
+            self.assertEqual(comment.text, self.comment_text)
+            self.assertEqual(comment.author, self.user)
 
     def test_follow_created_deleted(self):
         """Проверка отпииски и подписки на автора."""

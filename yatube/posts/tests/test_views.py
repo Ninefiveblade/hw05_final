@@ -23,9 +23,7 @@ class PostViewTest(TestCase):
     group_title = 'Тайтл'
     group_slug = 'group_slug'
     group_description = 'group_description'
-    post_text = 'Текст'
     count_page = 1
-    post_id = 1
     small_gif = (
         b'\x47\x49\x46\x38\x39\x61\x02\x00'
         b'\x01\x00\x80\x00\x00\x00\x00\x00'
@@ -54,12 +52,15 @@ class PostViewTest(TestCase):
             content=cls.small_gif,
             content_type=cls.image_content
         )
-        cls.post = Post.objects.create(
+        cls.post_any_text = Post.objects.create(
             author=cls.user,
-            text=cls.post_text,
+            text='any_text',
             image=cls.uploaded,
             group=cls.group
         )
+
+    def setUp(self):
+        cache.clear()
 
     @classmethod
     def tearDownClass(cls):
@@ -70,17 +71,19 @@ class PostViewTest(TestCase):
         if post:
             self.assertIn('post', context)
             post = context['post']
+        elif post:
+            self.assertIn('posts', context)
+            post = context['posts']
         else:
             self.assertIn('page_obj', context)
             post = context['page_obj'][0]
         self.assertEqual(post.author, PostViewTest.user)
-        self.assertEqual(post.pub_date, PostViewTest.post.pub_date)
-        self.assertEqual(post.text, PostViewTest.post.text)
-        self.assertEqual(post.group, PostViewTest.post.group)
-        self.assertEqual(post.image, PostViewTest.post.image)
+        self.assertEqual(post.pub_date, PostViewTest.post_any_text.pub_date)
+        self.assertEqual(post.text, PostViewTest.post_any_text.text)
+        self.assertEqual(post.group, PostViewTest.post_any_text.group)
+        self.assertEqual(post.image, PostViewTest.post_any_text.image)
 
     def test_pages_uses_correct_template(self):
-        cache.clear()
         """Проверка: страницы используют верный шаблон."""
         templates_url_names = {
             reverse('posts:index'): 'posts/index.html',
@@ -91,10 +94,16 @@ class PostViewTest(TestCase):
                 reverse('posts:profile', kwargs={'username': self.username})
             ): 'posts/profile.html',
             (
-                reverse('posts:post_detail', kwargs={'post_id': self.post.id})
+                reverse(
+                    'posts:post_detail',
+                    kwargs={'post_id': self.post_any_text.id}
+                )
             ): 'posts/post_detail.html',
             (
-                reverse('posts:post_edit', kwargs={'post_id': self.post.id})
+                reverse(
+                    'posts:post_edit',
+                    kwargs={'post_id': self.post_any_text.id}
+                )
             ): 'posts/create_post.html',
             reverse('posts:post_create'): 'posts/create_post.html',
         }
@@ -122,7 +131,7 @@ class PostViewTest(TestCase):
         """Проверка: страница post_edit использует
         верный контекст."""
         response = self.authorized.get(reverse(
-            'posts:post_edit', kwargs={'post_id': self.post.id}
+            'posts:post_edit', kwargs={'post_id': self.post_any_text.id}
         ))
 
         form_fields = {
@@ -138,7 +147,6 @@ class PostViewTest(TestCase):
     def test_index_show_correct_context(self):
         """Проверка: страница index использует
         верный контекст."""
-        cache.clear()
         post = self.authorized.get(reverse('posts:index'))
         context = post.context
         self.check_context_contains_page_or_post(context, post)
@@ -154,11 +162,18 @@ class PostViewTest(TestCase):
         """Проверка: страница post_detail использует
         верный контекст."""
         response = self.authorized.get(
-            reverse('posts:post_detail', kwargs={'post_id': self.post.id})
+            reverse(
+                'posts:post_detail',
+                kwargs={'post_id': self.post_any_text.id}
+            )
         )
-        context_image = response.context.get('posts').image
-        self.assertEqual(context_image, self.image_template)
-        self.assertEqual(response.context['count'], self.count_page)
+        context_post = response.context['posts']
+        self.assertEqual(context_post.author, PostViewTest.user)
+        self.assertEqual(
+            context_post.pub_date, PostViewTest.post_any_text.pub_date
+        )
+        self.assertEqual(context_post.text, PostViewTest.post_any_text.text)
+        self.assertEqual(context_post.group, PostViewTest.post_any_text.group)
 
     def test_profile_show_correct_context(self):
         """Проверка: страница profile использует
@@ -170,7 +185,6 @@ class PostViewTest(TestCase):
         self.check_context_contains_page_or_post(context)
 
     def test_posts_avail_on_pages(self):
-        cache.clear()
         """Проверка: посты доступны на страницах:
         index, group_list, profile."""
         response = self.authorized.get(reverse('posts:index'))
@@ -181,13 +195,13 @@ class PostViewTest(TestCase):
         )
         response_post = response.context.get('post').id
         response_group = response.context.get('post').group.title
-        self.assertEqual(response_post, self.post.id)
+        self.assertEqual(response_post, self.post_any_text.id)
         self.assertEqual(response_group, self.group_title)
         response = self.authorized.get(
             reverse('posts:profile', kwargs={'username': self.username})
         )
         for post_ in response.context.get('page_obj'):
-            self.assertEqual(post_.id, self.post.id)
+            self.assertEqual(post_.id, self.post_any_text.id)
             self.assertEqual(post_.group.title, self.group_title)
 
     def test_about_uses_correct_template(self):
@@ -231,11 +245,10 @@ class PostViewTest(TestCase):
                 self.assertIsInstance(form_field, expected)
 
     def test_cache_index_page(self):
-        """Проверка индексации главной страницы."""
-        cache.clear()
+        """Проверка кеширования главной страницы."""
         response_first = self.client.get(reverse('posts:index'))
-        post = Post.objects.get(id=self.post_id)
-        Post.objects.filter(id=self.post_id).delete()
+        post = Post.objects.get(id=self.post_any_text.id)
+        Post.objects.filter(id=self.post_any_text.id).delete()
         response_second = self.authorized.get(reverse('posts:index'))
         self.assertIn(post.text, response_first.content.decode('utf-8'))
         self.assertIn(post.text, response_second.content.decode('utf-8'))

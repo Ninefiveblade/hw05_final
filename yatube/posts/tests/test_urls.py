@@ -15,10 +15,10 @@ class PostURLTests(TestCase):
     group_slug = 'group_slug'
     group_description = 'group_description'
     username = 'auth'
-    post_text_first = 'Текст'
 
     @classmethod
     def setUpClass(cls):
+        cache.clear()
         super().setUpClass()
         cls.user = User.objects.create_user(username=cls.username)
         cls.authorized = Client()
@@ -28,23 +28,25 @@ class PostURLTests(TestCase):
             slug=cls.group_slug,
             description=cls.group_description
         )
-        cls.post = Post.objects.create(
+        cls.post_text = Post.objects.create(
             author=cls.user,
-            text=cls.post_text_first,
+            text='text',
             group=cls.group,
         )
+
+    def setUp(self):
+        cache.clear()
 
     def test_urls_autorized(self):
         """Проверка доступности шаблонов авторизованному
         пользователю."""
-        cache.clear()
         templates_url_names = {
             '/': 'posts/index.html',
             '/group/group_slug/': 'posts/group_list.html',
             '/profile/auth/': 'posts/profile.html',
-            f'/posts/{self.post.id}/': 'posts/post_detail.html',
+            f'/posts/{self.post_text.id}/': 'posts/post_detail.html',
             '/create/': 'posts/create_post.html',
-            f'/posts/{self.post.id}/edit/': 'posts/create_post.html',
+            f'/posts/{self.post_text.id}/edit/': 'posts/create_post.html',
         }
 
         for address, template in templates_url_names.items():
@@ -56,12 +58,11 @@ class PostURLTests(TestCase):
     def test_urls_unautorized(self):
         """Проверка доступности шаблонов неавторизированному
         пользователю."""
-        cache.clear()
         templates_url_names = {
             '/': 'posts/index.html',
             '/group/group_slug/': 'posts/group_list.html',
             '/profile/auth/': 'posts/profile.html',
-            f'/posts/{self.post.id}/': 'posts/post_detail.html',
+            f'/posts/{self.post_text.id}/': 'posts/post_detail.html',
         }
 
         for address, template in templates_url_names.items():
@@ -75,9 +76,9 @@ class PostURLTests(TestCase):
         пользователя."""
         response = self.client.get('/create/')
         self.assertRedirects(response, ('/auth/login/?next=/create/'))
-        response = self.client.get(f'/posts/{self.post.id}/edit/')
+        response = self.client.get(f'/posts/{self.post_text.id}/edit/')
         self.assertRedirects(
-            response, (f'/auth/login/?next=/posts/{self.post.id}/edit/')
+            response, (f'/auth/login/?next=/posts/{self.post_text.id}/edit/')
         )
 
     def test_page_not_found(self):
@@ -131,9 +132,9 @@ class PostURLTests(TestCase):
 
     def test_comment_unauthorized(self):
         """Проверка редиректа неавторизированного пользователя."""
-        request = self.client.get(f'/posts/{self.post.id}/comment/')
+        request = self.client.get(f'/posts/{self.post_text.id}/comment/')
         self.assertEqual(request.status_code, HTTPStatus.FOUND)
         self.assertRedirects(
             request, (f'/auth/login/?next=%2Fposts%2F'
-                      f'{self.post.id}%2Fcomment%2F')
+                      f'{self.post_text.id}%2Fcomment%2F')
         )
