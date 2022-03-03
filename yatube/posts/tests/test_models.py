@@ -9,7 +9,6 @@ User = get_user_model()
 class PostModelTest(TestCase):
     "Тест models приложения posts"
     group_title = 'Тестовая группа'
-    post_text = 'test_message'
 
     @classmethod
     def setUpClass(cls):
