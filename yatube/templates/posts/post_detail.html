@@ -34,9 +34,13 @@
             <img class="card-img my-2" src="{{ im.url }}">
           {% endthumbnail %}
           <p>{{ posts.text }}</p>
+          <p>
           {% if posts.author == request.user %}
           <a class="btn btn-primary" href="{% url 'posts:post_edit' posts.id %}">
             редактировать запись
+          </a>
+          <a class="btn btn-primary" href="{% url 'posts:delete_post' posts.id %}">
+            удалить запись
           </a>
           {% endif %}
           </p>

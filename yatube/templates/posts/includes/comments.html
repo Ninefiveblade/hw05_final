@@ -5,6 +5,11 @@
               <a href="{% url 'posts:profile' comment.author.username %}">
                 {{ comment.author.username }}
               </a>
+              &nbsp;
+              <a class="btn btn-light" href="{% url 'posts:delete_comment' post.id comment.id %}">
+                <b>Удалить комментарий</b>
+              </a>
+            </p>
             </h5>
               <p>
               {{ comment.text }}

@@ -25,7 +25,14 @@ SECRET_KEY = 'gqx)ya$(0ii(6=&%&-36sk(-73mh_$&s)e1q+uk9^@*92e(r^2'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '[::1]', 'testserver']
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    '[::1]',
+    'testserver',
+    'www.ninefiveblade.pythonanywhere.com',
+    'ninefiveblade.pythonanywhere.com'
+]
 
 
 # Application definition
@@ -42,6 +49,7 @@ INSTALLED_APPS = [
     'core.apps.CoreConfig',
     'about.apps.AboutConfig',
     'sorl.thumbnail',
+    'debug_toolbar',
 ]
 
 MIDDLEWARE = [
@@ -52,11 +60,16 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware'
 ]
 
 ROOT_URLCONF = 'yatube.urls'
 
 TEMPLATES_DIR = os.path.join(BASE_DIR, 'templates')
+
+INTERNAL_IPS = [
+    '127.0.0.1',
+]
 
 TEMPLATES = [
     {

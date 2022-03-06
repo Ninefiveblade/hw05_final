@@ -2,7 +2,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 
-from .models import Post, Follow, Group, User
+from .models import Post, Follow, Group, User, Comment
 from .forms import PostForm, CommentForm
 from .utils import paginator_obg
 from django.views.decorators.cache import cache_page
@@ -142,6 +142,14 @@ def post_edit(request, post_id):
 
 
 @login_required
+def delete_post(request, post_id):
+    post = Post.objects.get(id=post_id)
+    if request.user == post.author:
+        post.delete()
+    return redirect('posts:index')
+
+
+@login_required
 def add_comment(request, post_id):
     post = Post.objects.get(id=post_id)
     form = CommentForm(request.POST or None)
@@ -151,6 +159,15 @@ def add_comment(request, post_id):
         comment.post = post
         comment.save()
     return redirect('posts:post_detail', post_id=post_id)
+
+
+@login_required
+def delete_comment(request, comment_id, post_id):
+    comment = Comment.objects.get(id=comment_id)
+    if request.user == comment.author:
+        comment.delete()
+    return redirect(
+        'posts:post_detail', post_id=post_id)
 
 
 @login_required
